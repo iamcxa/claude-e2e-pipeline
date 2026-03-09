@@ -19,7 +19,7 @@ Human-agent collaborative browser walkthrough with trace recording, health monit
 ## Invocation
 
 ```
-/e2e-walkthrough [context] [--mode guided|step|auto] [--sites name1,name2] [--pr N] [--issue ID]
+/e2e-walkthrough [context] [--mode guided|step|auto] [--sites name1,name2] [--pr N] [--issue ID] [--no-video]
 ```
 
 | Entry point | Behavior |
@@ -30,6 +30,7 @@ Human-agent collaborative browser walkthrough with trace recording, health monit
 | `--page org-settings` | Explore all mapped elements on that page |
 | `--smoke` | Walk critical paths from mapping |
 | `--sites admin,portal` | Cross-site walkthrough using named mappings |
+| `--no-video` | Skip screen recording (default: recording ON) |
 
 ## Discover Mapping (BLOCKING — must complete before proceeding)
 
@@ -152,7 +153,13 @@ Human adjusts the plan via natural conversation:
 
 For detailed execution mechanics (startup, multi-site, per-step loop, health checks, anomaly handling), see [reference.md](./reference.md).
 
-**Summary**: Open browser → verify auth → start trace → execute steps in chosen interaction mode → track mapping discrepancies.
+**Summary**: Open browser → verify auth → start trace → **start recording** → execute steps in chosen interaction mode → track mapping discrepancies.
+
+**Start recording** (unless `--no-video`):
+
+```bash
+agent-browser record start "$REPORT_DIR/full.webm"
+```
 
 **Per-step loop**: snapshot → action via `@ref` → wait networkidle → screenshot → health check → report to human.
 
@@ -168,14 +175,20 @@ For detailed execution mechanics (startup, multi-site, per-step loop, health che
 
 For detailed procedures (trace analysis, flow YAML rules, mapping self-repair), see [reference.md](./reference.md).
 
-1. **Stop trace**: `agent-browser trace stop "$REPORT_DIR/trace.zip"`
-2. **Trace analysis**: Dispatch `e2e-trace-analyzer` subagent with `trace_path` + `report_dir`
-3. **Report**: Write `$REPORT_DIR/report.md` with summary, step results, health log
-4. **Flow YAML auto-generation (MANDATORY)**: Always auto-generate — never ask. Auto-name: `walkthrough-<timestamp>-<first-page>.yaml`. Write to `.claude/e2e/flows/`
-5. **Cross-site flow**: Use `sites:` instead of `mapping:` when `--sites` was used
-6. **PR/Issue posting**: `--pr` → `gh pr comment`, `--issue` → Linear MCP
-7. **Mapping self-repair**: Present discrepancy list, human approves, patch mapping. 3+ stale on same page → recommend `/e2e-map --page`
-8. **Browser handoff (BLOCKING: flow YAML must be written first)**: Present summary, only close after human confirms
+1. **Stop recording** (if recording): `agent-browser record stop`
+2. **Stop trace**: `agent-browser trace stop "$REPORT_DIR/trace.zip"`
+3. **Trace analysis**: Dispatch `e2e-trace-analyzer` subagent with `trace_path` + `report_dir`
+4. **Report**: Write `$REPORT_DIR/report.md` with summary, step results, health log, media links
+5. **GIF generation** (if recording):
+   ```bash
+   ffmpeg -framerate 1 -pattern_type glob -i "$REPORT_DIR/step-*.png" \
+     -vf "scale=800:-1:flags=lanczos" -loop 0 -y "$REPORT_DIR/steps.gif"
+   ```
+6. **Flow YAML auto-generation (MANDATORY)**: Always auto-generate — never ask. Auto-name: `walkthrough-<timestamp>-<first-page>.yaml`. Write to `.claude/e2e/flows/`
+7. **Cross-site flow**: Use `sites:` instead of `mapping:` when `--sites` was used
+8. **PR/Issue posting**: `--pr` → `gh pr comment`, `--issue` → Linear MCP
+9. **Mapping self-repair**: Present discrepancy list, human approves, patch mapping. 3+ stale on same page → recommend `/e2e-map --page`
+10. **Browser handoff (BLOCKING: flow YAML must be written first)**: Present summary, only close after human confirms
 
 ## Common Mistakes
 
