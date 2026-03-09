@@ -71,6 +71,23 @@ agent-browser eval "<js>"                         # Execute JavaScript in page c
 agent-browser eval -b "<base64>"                  # Execute base64-encoded JS (reliable escaping)
 ```
 
+## Recording
+
+```bash
+agent-browser record start "<abs-path.webm>"        # Start viewport recording (WebM)
+agent-browser record stop                            # Stop recording and save file
+agent-browser record restart "<abs-path.webm>"       # Stop current + start new recording
+```
+
+**Rules:**
+- Start AFTER `open` (browser must be active)
+- Stop BEFORE `close` (or video file is truncated)
+- Stop BEFORE `trace stop` (recording captures the trace-stop moment)
+- Path must be absolute (same as screenshots/traces)
+- Output format: WebM (VP8/VP9 codec)
+- Creates a fresh browser context but preserves cookies and localStorage
+- If no URL provided to `start`, records current page
+
 ## Semantic Locators (alternative to @ref)
 
 ```bash
