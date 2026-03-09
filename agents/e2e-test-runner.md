@@ -55,6 +55,7 @@ The orchestrator skill dispatches this agent with the following fields. Parse th
 | `report_dir` | Yes | Absolute path to the directory for report output (create with `mkdir -p` if missing) |
 | `headed` | No | Run browser in headed mode (default: `true` — always headed in current workflow) |
 | `suite_context` | No | When `true`, use `--session {{app}}` on all `agent-browser` commands for multi-site session isolation (default: `false`) |
+| `record` | No | When `true`, record browser viewport to `{{report_dir}}/full.webm` (default: `false`) |
 
 If any required field is missing, STOP with: "Missing required field: `<field>`. The orchestrator must provide all required fields."
 
@@ -125,6 +126,16 @@ agent-browser trace start
 agent-browser console --clear 2>&1 || true
 agent-browser errors --clear 2>&1 || true
 ```
+
+### 1f. Start Recording (conditional)
+
+If `record` is `true`:
+
+```bash
+agent-browser record start "{{report_dir}}/full.webm"
+```
+
+Start recording AFTER trace start. The trace captures internal data; the recording captures the visual viewport.
 
 ---
 
@@ -247,16 +258,24 @@ For each entry in the step's `expect:` array, resolve and verify independently:
 
 ### 2i. Screenshot
 
-If the step has `screenshot: true` OR the step failed:
+Capture a screenshot for EVERY step (not just failures). This enables GIF generation downstream.
 
 ```bash
-agent-browser screenshot --annotate "{{report_dir}}/step-{{id}}.png"
+agent-browser screenshot --annotate "{{report_dir}}/step-{{step_number}}-{{id}}.png"
 ```
 
 If `--annotate` fails, fall back to:
 
 ```bash
-agent-browser screenshot "{{report_dir}}/step-{{id}}.png"
+agent-browser screenshot "{{report_dir}}/step-{{step_number}}-{{id}}.png"
+```
+
+**Naming**: Use zero-padded step number prefix (e.g., `step-01-navigate.png`, `step-02-fill-email.png`) to ensure correct sort order for GIF generation.
+
+On failure, ALSO capture the failure-specific screenshot:
+
+```bash
+agent-browser screenshot "{{report_dir}}/FAIL-{{id}}.png"
 ```
 
 ### 2j. Collect Health Data
@@ -289,11 +308,21 @@ On ANY failure during a step:
 
 ## Phase 3: Report
 
-### 3a. Stop Trace
+### 3a. Stop Recording & Trace
+
+If `record` is `true`:
+
+```bash
+agent-browser record stop
+```
+
+Then stop the trace:
 
 ```bash
 agent-browser trace stop "{{report_dir}}/trace.zip"
 ```
+
+**Order matters**: record stop → trace stop → (do NOT close browser).
 
 ### 3b. Do NOT Close Browser
 
@@ -346,6 +375,7 @@ Write `{{report_dir}}/report.md` with the following structure:
 
 ## Artifacts
 - Trace: {{report_dir}}/trace.zip
+- Recording: {{report_dir}}/full.webm   ← (only if record was true)
 - Screenshots: {{report_dir}}/step-*.png, FAIL-*.png
 ```
 
@@ -362,6 +392,7 @@ You MUST end your response with this exact structured block (the orchestrator pa
 - console_errors: N
 - api_failures: N
 - report_path: {{report_dir}}/report.md
+- recording_path: {{report_dir}}/full.webm    ← (only if record was true, else omit)
 - key_findings:
   - "finding 1"
   - "finding 2"
