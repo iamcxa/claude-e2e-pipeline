@@ -169,7 +169,7 @@ If recording was enabled, append:
 
 **PR comment (if --pr):** Write `$REPORT_DIR/pr-summary.md` with:
 - Pass/fail summary table
-- Steps GIF reference (local path for Phase 1; URL for Phase 2)
+- Steps GIF reference (local path)
 - Key findings from trace analysis
 - Link to full report
 
