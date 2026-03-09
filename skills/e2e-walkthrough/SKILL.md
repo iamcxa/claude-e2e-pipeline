@@ -188,7 +188,26 @@ For detailed procedures (trace analysis, flow YAML rules, mapping self-repair), 
 7. **Cross-site flow**: Use `sites:` instead of `mapping:` when `--sites` was used
 8. **PR/Issue posting**: `--pr` → `gh pr comment`, `--issue` → Linear MCP
 9. **Mapping self-repair**: Present discrepancy list, human approves, patch mapping. 3+ stale on same page → recommend `/e2e-map --page`
-10. **Browser handoff (BLOCKING: flow YAML must be written first)**: Present summary, only close after human confirms
+10. **Browser handoff (BLOCKING: flow YAML must be written first)**: Present summary table, then numbered action menu. Do NOT close browser — user may need to inspect final state.
+
+**Post-completion menu** (always present, numbered):
+
+```
+接下來要做什麼？
+
+1. 發佈到 PR（gh pr comment <PR>）
+2. 產生可重複使用的 flow YAML → /e2e-test 可 replay
+3. 產出 GIF（步驟截圖動畫）
+4. 產出 WebM 錄影（完整 viewport）
+5. 產出 GIF + WebM（兩者都要）
+6. 結束（browser 保持開啟）
+```
+
+- Options 3-5 only shown when recording was active
+- Option 1 only shown when `--pr` was provided or user mentioned a PR
+- Option 2 is always shown (flow YAML auto-generated, but user may want to rename/edit)
+- **Never close browser without explicit user confirmation**
+- Multiple selections allowed (e.g., "1, 3")
 
 ## Common Mistakes
 
