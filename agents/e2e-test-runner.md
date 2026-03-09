@@ -351,11 +351,21 @@ Write `{{report_dir}}/report.md` with the following structure:
 | Console Errors | N |
 | API Failures | N |
 
+## Evidence
+
+| Artifact | Link |
+|----------|------|
+| Steps GIF | [steps.gif](./steps.gif) |
+| Full recording | [full.webm](./full.webm) |
+| Trace (interactive) | [trace.zip](./trace.zip) |
+
+_(Recording/GIF rows only if `record` was true)_
+
 ## Step Results
 
 ### [PASS] step-id: action description
 - Expectations: 3/3 passed
-- Screenshot: step-id.png
+- Screenshot: [step-01-step-id.png](./step-01-step-id.png)
 
 ### [FAIL] step-id: action description
 - **Error**: reason
@@ -363,7 +373,7 @@ Write `{{report_dir}}/report.md` with the following structure:
   - PASS: "element visible on page"
   - FAIL: "url contains /expected"
   - PASS: "dialog not visible"
-- Screenshot: FAIL-step-id.png
+- Screenshot: [FAIL-step-id.png](./FAIL-step-id.png)
 - Debug Snapshot: FAIL-step-id-snapshot.txt
 
 ### [SKIP] step-id: action description (optional)
@@ -372,11 +382,6 @@ Write `{{report_dir}}/report.md` with the following structure:
 ## Health Issues
 - N console errors (after noise filter)
 - N API failures (4xx/5xx)
-
-## Artifacts
-- Trace: {{report_dir}}/trace.zip
-- Recording: {{report_dir}}/full.webm   ← (only if record was true)
-- Screenshots: {{report_dir}}/step-*.png, FAIL-*.png
 ```
 
 ### 3d. Return Structured Summary
