@@ -10,7 +10,7 @@ Resolve browser E2E test flows and dispatch the `e2e-test-runner` agent for exec
 ## Invocation
 
 ```
-/e2e-test [flow-name|--tag tag|--all] [--mapping name] [--all-sites] [--suite name] [--pr NUMBER] [--issue ISSUE-ID]
+/e2e-test [flow-name|--tag tag|--all] [--mapping name] [--all-sites] [--suite name] [--pr NUMBER] [--issue ISSUE-ID] [--video]
 ```
 
 | Arg | Effect |
@@ -23,6 +23,7 @@ Resolve browser E2E test flows and dispatch the `e2e-test-runner` agent for exec
 | `--issue DRC-2779` | Include issue context in report header |
 | `--all-sites` | Discover all mappings and run applicable flows on each site |
 | `--suite name` | Run a specific suite from `.claude/e2e/suites/<name>.yaml` |
+| `--video` | Enable screen recording + GIF generation (auto-enabled when `--pr` is used) |
 
 ## Prerequisites
 
@@ -107,6 +108,7 @@ For each mapping+flow group:
 | `app` | From mapping `app` field |
 | `report_dir` | `$(pwd)/e2e-reports/$(date +%Y%m%d-%H%M%S)` (create with `mkdir -p`) |
 | `headed` | Always `true` (agent opens browser in headed mode) |
+| `record` | `true` when `--video` or `--pr` is present, otherwise `false` |
 | `suite_context` | Set to `true` when dispatching via `--all-sites` or `--suite` (enables multi-session with `--session <app>`) |
 
 ### Dispatch
@@ -116,7 +118,8 @@ Agent(subagent_type="e2e-test-runner"):
   "Execute E2E flow:
    flow_path: <path>  mapping_path: <path>  auth_profile: <path>
    base_url: <url>  app: <name>  report_dir: <path>  headed: true
-   suite_context: true"    # only for --all-sites / --suite
+   record: true              # only when --video or --pr
+   suite_context: true"      # only for --all-sites / --suite
 ```
 
 Batch mode: dispatch sequentially (session reuse). Multi-site: dispatch per-site groups, always include `suite_context: true`.
@@ -125,9 +128,31 @@ Batch mode: dispatch sequentially (session reuse). Multi-site: dispatch per-site
 
 Agent returns: `total_steps, passed, failed, skipped, console_errors, api_failures, report_path, key_findings`.
 
+### Phase 1.5 — Media Post-Processing
+
+After agent returns, if `record` was `true`:
+
+**Generate steps GIF** from per-step screenshots:
+
+```bash
+ffmpeg -framerate 1 -pattern_type glob -i "$REPORT_DIR/step-*.png" \
+  -vf "scale=800:-1:flags=lanczos" -loop 0 -y "$REPORT_DIR/steps.gif"
+```
+
+- Framerate 1 = each screenshot holds 1 second
+- Width 800px, height auto-scaled with lanczos filter
+- `-loop 0` = infinite loop
+- If ffmpeg fails (no screenshots, missing binary), warn but continue — GIF is optional
+
+**Verify**: Check file exists and size > 0.
+
 ## Phase 2 — Present Results
 
 **Single:** `Test complete: N/M PASS (X console errors, Y API failures) Report: <path> Browser still open.`
+
+If recording was enabled, append:
+- `Recording: <path>/full.webm`
+- `Steps GIF: <path>/steps.gif`
 
 **Batch:**
 | Flow | Result | Steps |
@@ -142,7 +167,13 @@ Agent returns: `total_steps, passed, failed, skipped, console_errors, api_failur
 
 **Mapping staleness:** 0 stale -> nothing; 1-2 -> `/e2e-walkthrough --page`; 3+ -> `/e2e-map --page`.
 
-**PR comment (if --pr):** Write `$REPORT_DIR/pr-summary.md`, then `gh pr comment <PR> --body-file`.
+**PR comment (if --pr):** Write `$REPORT_DIR/pr-summary.md` with:
+- Pass/fail summary table
+- Steps GIF reference (local path for Phase 1; URL for Phase 2)
+- Key findings from trace analysis
+- Link to full report
+
+Then: `gh pr comment <PR> --body-file $REPORT_DIR/pr-summary.md`
 
 **Browser handoff:** Only close after human confirms. Multi-site: `agent-browser --session <app> close` for each.
 
