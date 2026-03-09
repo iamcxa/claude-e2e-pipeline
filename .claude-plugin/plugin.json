@@ -3,13 +3,11 @@
   "description": "Browser E2E testing pipeline with context-isolating subagents",
   "version": "1.1.0",
   "author": {
-    "name": "Kent Chen"
+    "name": "Kent Chen",
+    "url": "https://github.com/iamcxa"
   },
-  "dependencies": {
-    "agent-browser": {
-      "type": "cli",
-      "description": "CLI for browser automation — required for all mapping, testing, and walkthrough operations",
-      "url": "https://github.com/anthropics/agent-browser"
-    }
-  }
+  "homepage": "https://github.com/iamcxa/claude-e2e-pipeline",
+  "repository": "https://github.com/iamcxa/claude-e2e-pipeline",
+  "license": "MIT",
+  "keywords": ["e2e", "browser-testing", "agent-browser", "ui-mapping", "subagents"]
 }
