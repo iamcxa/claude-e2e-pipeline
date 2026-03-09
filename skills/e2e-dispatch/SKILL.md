@@ -76,7 +76,7 @@ No args or ambiguous request: present the routing menu and ask user to choose:
 ## Dispatch
 
 ### --test
-Invoke `Skill: "e2e-test"` with the original arguments (flow name, --tag, --suite, --all, --pr, --issue).
+Invoke `Skill: "e2e-test"` with the original arguments (flow name, --tag, --suite, --all, --pr, --issue, **--video**).
 The e2e-test skill handles flow resolution and dispatches e2e-test-runner agent(s).
 
 ### --map (non-interactive)
@@ -87,7 +87,7 @@ The e2e-map skill runs codebase analysis then dispatches e2e-mapper agent.
 Invoke `Skill: "e2e-map"` — runs entirely in main context (interactive mode).
 
 ### --walk
-Invoke `Skill: "e2e-walkthrough"` with mapping name and any --mode, --smoke, --sites, --pr, --issue arguments.
+Invoke `Skill: "e2e-walkthrough"` with mapping name and any --mode, --smoke, --sites, --pr, --issue, **--no-video** arguments.
 Runs entirely in main context (interactive).
 
 ### --analyze
@@ -133,3 +133,5 @@ Direct invocation of `/e2e-test`, `/e2e-map`, `/e2e-walkthrough`, `/e2e-skill-op
 | Interactive explore | `/e2e-dispatch --walk admin-panel` |
 | Analyze trace | `/e2e-dispatch --analyze e2e-reports/20260306/trace.zip` |
 | Debug skill issue | `/e2e-dispatch --ops --debug` |
+| Record a test run | `/e2e-dispatch --test login-flow --video` |
+| Walkthrough no video | `/e2e-dispatch --walk admin-panel --no-video` |
