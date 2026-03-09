@@ -106,6 +106,8 @@ For each failure found, if a SHA reference exists and `$TMPDIR/resources/<sha>` 
 
 Apply noise filter (Step 4) — discard entries whose URL matches any noise pattern.
 
+**Deduplication**: Group failures by `method + URL_path + status` (ignore query strings). Report unique failures with occurrence count. Format: `POST /api/items 500 (×3)` for repeated failures. The `api_failures` count in the summary reflects **unique** failures, not total occurrences.
+
 ---
 
 ## Step 3: Parse trace.trace (console errors)

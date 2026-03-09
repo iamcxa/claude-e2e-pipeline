@@ -61,9 +61,11 @@ If any required field is missing, STOP with: "Missing required field: `<field>`.
 
 ## Startup
 
-1. Read the plugin reference files for CLI syntax and patterns:
-   - `~/.claude/plugins/local/e2e-pipeline/references/commands.md`
-   - `~/.claude/plugins/local/e2e-pipeline/references/common-patterns.md`
+1. Read the plugin reference files for CLI syntax and patterns. Locate them by finding the `e2e-pipeline` plugin directory:
+   ```bash
+   PLUGIN_DIR=$(ls -d ~/.claude/plugins/cache/*/e2e-pipeline/*/references 2>/dev/null | head -1 || ls -d ~/.claude/plugins/local/e2e-pipeline/references 2>/dev/null | head -1)
+   ```
+   Then read `$PLUGIN_DIR/commands.md` and `$PLUGIN_DIR/common-patterns.md`.
 2. Read project-level references if they exist (non-fatal if missing):
    - `<project>/.claude/skills/agent-browser/references/authentication.md`
    - `<project>/.claude/skills/agent-browser/references/common-patterns.md`
@@ -147,6 +149,8 @@ For each step in the flow's `steps:` array, execute the following sub-phases. Tr
 
 Replace all `${key}` tokens in action strings, expect entries, and selector templates using values from the flow's `variables:` block. For parameterized elements like `element(param=value)`, extract the params and substitute into the mapping selector's `${param}` placeholders.
 
+**Validation**: Before executing any steps, scan all action and expect strings for `${...}` tokens. If any token cannot be resolved from `variables:` or action parameters, STOP with: "Unresolvable variable(s): `${key1}`, `${key2}`. Add them to the flow's `variables:` block or fix the token reference."
+
 ### 2b. Parse Action
 
 Action string formats and their handling:
@@ -163,7 +167,7 @@ Action string formats and their handling:
 | `"Press <key>"` | `agent-browser press "<key>"` |
 | `"Scroll down"` / `"Scroll up"` | `agent-browser scroll down` / `scroll up` |
 | `"Navigate to <url_or_page>"` | If starts with `/`, open as URL path. Otherwise look up page's url_pattern. |
-| `"Eval '<js>'"` | `agent-browser eval "<js>"` |
+| `"Eval '<js>'"` | `agent-browser eval "<js>"`. If eval returns a non-zero exit code or stderr contains an error, mark step as FAIL with the error message. |
 | `"Verify <element> on <location>"` | Navigate if needed, snapshot, run expects only (no click) |
 | `"Verify <description>"` | Snapshot current page, run expects only (no navigation) |
 | `"Verify <el1>, <el2>, ... on <location>"` | Verify multiple elements -- just snapshot + run expects |

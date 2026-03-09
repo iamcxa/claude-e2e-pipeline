@@ -179,11 +179,7 @@ For detailed procedures (trace analysis, flow YAML rules, mapping self-repair), 
 2. **Stop trace**: `agent-browser trace stop "$REPORT_DIR/trace.zip"`
 3. **Trace analysis**: Dispatch `e2e-trace-analyzer` subagent with `trace_path` + `report_dir`
 4. **Report**: Write `$REPORT_DIR/report.md` with summary, step results, health log, media links
-5. **GIF generation** (if recording):
-   ```bash
-   ffmpeg -framerate 1 -pattern_type glob -i "$REPORT_DIR/step-*.png" \
-     -vf "scale=800:-1:flags=lanczos" -loop 0 -y "$REPORT_DIR/steps.gif"
-   ```
+5. **GIF generation** (if recording): see `references/commands.md` § GIF Generation for the canonical ffmpeg command. Warn but continue if ffmpeg fails.
 6. **Flow YAML auto-generation (MANDATORY)**: Always auto-generate — never ask. Auto-name: `walkthrough-<timestamp>-<first-page>.yaml`. Write to `.claude/e2e/flows/`
 7. **Cross-site flow**: Use `sites:` instead of `mapping:` when `--sites` was used
 8. **PR/Issue posting**: `--pr` → `gh pr comment`, `--issue` → Linear MCP

@@ -1,6 +1,6 @@
 ---
 name: e2e-map
-description: Use when creating or updating UI element mappings for E2E testing — mapping page selectors, recording app structure, or refreshing stale mappings. Triggers on "e2e map", "map the UI", "update mapping", "refresh mapping", "map selectors", "create mapping", "record e2e".
+description: Use when creating or updating UI element mappings for E2E testing — mapping page selectors, capturing app structure, or refreshing stale mappings. Triggers on "e2e map", "map the UI", "update mapping", "refresh mapping", "map selectors", "create mapping".
 ---
 
 # E2E Map — Orchestrator
@@ -112,7 +112,7 @@ After Phase 1, prepare the agent input and dispatch.
 ### Dispatch
 
 ```
-Agent(e2e-mapper):
+Agent(subagent_type="e2e-mapper"):
   base_url: <url>
   app: <app name>
   auth_profile: ~/.agent-browser/<app>/

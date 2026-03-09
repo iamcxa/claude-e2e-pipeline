@@ -62,6 +62,7 @@ The orchestrator skill dispatches this agent with the following fields. Parse th
 | `auth_profile` | Yes | Path to the agent-browser auth profile directory (e.g., `~/.agent-browser/my-app/`) |
 | `report_dir` | Yes | Absolute path to the directory for screenshots and artifacts (create with `mkdir -p` if missing) |
 | `routes` | No | List of URL paths to explore (e.g., `[/bookings, /customers]`). Empty list triggers discovery mode. |
+| `max_routes` | No | Maximum routes to explore in discovery mode (default: `20`). Ignored when explicit routes are provided. |
 | `existing_mapping_path` | No | Absolute path to an existing mapping YAML to update. If absent, create a new mapping. |
 | `target_page` | No | When set, explore ONLY this page and merge into existing mapping. Requires `existing_mapping_path`. |
 | `auth_config` | No | Auth configuration from existing mapping: `{type, verification, manual_prompt}`. If absent, agent auto-detects auth state. |
@@ -71,9 +72,11 @@ If any required field is missing, STOP with: "Missing required field: `<field>`.
 
 ## Startup
 
-1. Read the plugin reference files for CLI syntax and patterns:
-   - `~/.claude/plugins/local/e2e-pipeline/references/commands.md`
-   - `~/.claude/plugins/local/e2e-pipeline/references/common-patterns.md`
+1. Read the plugin reference files for CLI syntax and patterns. Locate them by finding the `e2e-pipeline` plugin directory:
+   ```bash
+   PLUGIN_DIR=$(ls -d ~/.claude/plugins/cache/*/e2e-pipeline/*/references 2>/dev/null | head -1 || ls -d ~/.claude/plugins/local/e2e-pipeline/references 2>/dev/null | head -1)
+   ```
+   Then read `$PLUGIN_DIR/commands.md` and `$PLUGIN_DIR/common-patterns.md`.
 2. Read project-level references if they exist (non-fatal if missing):
    - `<project>/.claude/skills/agent-browser/references/authentication.md`
    - `<project>/.claude/skills/agent-browser/references/common-patterns.md`
@@ -142,7 +145,9 @@ Compare current URL path against `{{base_url}}` path. If redirected to a differe
 
 - If `{{routes}}` is provided and non-empty, use that list.
 - If `{{target_page}}` is provided, explore ONLY that single page (navigate to its url_pattern from existing mapping).
-- If routes are empty (**discovery mode**): snapshot the current page, extract all navigation links (sidebar, header nav, tab bar, menu items), and use those as the initial route list. Follow one level deep.
+- If routes are empty (**discovery mode**): snapshot the current page, extract all navigation links (sidebar, header nav, tab bar, menu items), and use those as the initial route list. Follow one level deep. **Stop after `max_routes` routes (default 20).** If more routes are discovered, report the remaining as `unexplored_routes` in the summary so the orchestrator can inform the user.
+
+**Dynamic route filtering** (discovery mode): Skip URLs containing path parameters (`:id`, `${param}`, `[slug]`, or UUID-like segments). Report them as `unexplored_dynamic_routes` in the summary — these require specific IDs the agent cannot generate.
 
 ### Per-Route Exploration
 

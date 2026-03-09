@@ -88,6 +88,19 @@ agent-browser record restart "<abs-path.webm>"       # Stop current + start new 
 - Creates a fresh browser context but preserves cookies and localStorage
 - If no URL provided to `start`, records current page
 
+## GIF Generation (from per-step screenshots)
+
+```bash
+ffmpeg -framerate 1 -pattern_type glob -i "$REPORT_DIR/step-*.png" \
+  -vf "scale=800:-1:flags=lanczos" -loop 0 -y "$REPORT_DIR/steps.gif"
+```
+
+- Framerate 1 = each screenshot holds 1 second
+- Width 800px, height auto-scaled with lanczos filter
+- `-loop 0` = infinite loop
+- If ffmpeg fails (no screenshots, missing binary), warn but continue — GIF is optional
+- **Verify**: `test -s "$REPORT_DIR/steps.gif"` (exists and size > 0)
+
 ## Semantic Locators (alternative to @ref)
 
 ```bash

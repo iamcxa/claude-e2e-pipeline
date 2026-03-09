@@ -108,7 +108,7 @@ If verification fails, loop back to `--debug`. Write-back is not optional — at
 |------|---------|
 | Search past findings | `Read e2e-reports/skill-quality-findings.md` |
 | Search journal | `mcp__private-journal__search_journal` query: "e2e skill" |
-| List all e2e skills | `ls ~/.claude/plugins/local/e2e-pipeline/skills/*/SKILL.md` |
+| List all e2e skills | `ls ~/.claude/plugins/*/e2e-pipeline/*/skills/*/SKILL.md ~/.claude/plugins/local/e2e-pipeline/skills/*/SKILL.md 2>/dev/null` |
 | List project mappings | `ls .claude/e2e/mappings/*.yaml` |
 | List project flows | `ls .claude/e2e/flows/*.yaml` |
 | Verify a single flow | `/e2e-test <flow-name>` |

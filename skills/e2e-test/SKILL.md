@@ -132,19 +132,21 @@ Agent returns: `total_steps, passed, failed, skipped, console_errors, api_failur
 
 After agent returns, if `record` was `true`:
 
-**Generate steps GIF** from per-step screenshots:
+**Generate steps GIF** from per-step screenshots (see `references/commands.md` § GIF Generation for the canonical ffmpeg command). Warn but continue if ffmpeg fails — GIF is optional.
 
-```bash
-ffmpeg -framerate 1 -pattern_type glob -i "$REPORT_DIR/step-*.png" \
-  -vf "scale=800:-1:flags=lanczos" -loop 0 -y "$REPORT_DIR/steps.gif"
+### Phase 1.75 — Trace Analysis
+
+After agent returns (regardless of `record`), dispatch trace analysis:
+
+```
+Agent(subagent_type="e2e-trace-analyzer"):
+  trace_path: $REPORT_DIR/trace.zip
+  report_dir: $REPORT_DIR
 ```
 
-- Framerate 1 = each screenshot holds 1 second
-- Width 800px, height auto-scaled with lanczos filter
-- `-loop 0` = infinite loop
-- If ffmpeg fails (no screenshots, missing binary), warn but continue — GIF is optional
+Agent returns: `api_failures`, `console_errors`, `clean`, `analysis_path`. Merge these counts into the results (they may differ from the test-runner's per-step health counts, as trace analysis covers the full session including background requests).
 
-**Verify**: Check file exists and size > 0.
+If `trace.zip` doesn't exist (e.g., trace was never started), skip this phase.
 
 ## Phase 2 — Present Results
 

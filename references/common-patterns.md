@@ -63,6 +63,14 @@ Patterns and gotchas for E2E testing agents. For project-specific patterns, chec
 - Browser extension background requests
 - App-specific: check project's `health.known_noise` in mapping files
 
+## Browser Crash / Hang Recovery
+
+- **Detection**: If an `agent-browser` command hangs beyond the step timeout (or 60 seconds default), the browser process may be unresponsive.
+- **Recovery sequence**: `agent-browser close` (force-close the context) → re-open with `agent-browser --profile <path> --headed open <url>` → re-authenticate if needed → resume from the failed step.
+- **Save partial results**: Before retrying, write whatever report data was collected so far. A partial report is better than no report.
+- **Max retries**: Attempt recovery once. If the browser crashes again on the same step, STOP and report: "Browser unresponsive on step `<id>`. Partial results saved to `<report_dir>`."
+- **Common causes**: Memory-heavy pages, infinite redirect loops, unresponsive dev server, stale browser profiles.
+
 ## Trace Analysis
 
 - `trace.zip` contains: `trace.network` (JSONL HAR), `trace.trace` (JSONL events), `resources/` (response bodies)
