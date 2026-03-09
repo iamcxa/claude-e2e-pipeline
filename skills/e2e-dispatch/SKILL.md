@@ -1,6 +1,6 @@
 ---
 name: e2e-dispatch
-description: Use when performing any E2E browser operation — testing flows, mapping UI elements, walking through UI, analyzing traces, or maintaining e2e skills. Triggers on "e2e test", "run e2e", "browser test", "smoke test", "e2e map", "map UI", "map selectors", "update mapping", "e2e walkthrough", "explore feature", "step through", "analyze trace", "e2e debug", "e2e skill", "playwright test".
+description: Use when performing any E2E browser operation — testing flows, mapping UI elements, walking through UI, recording video, analyzing traces, or maintaining e2e skills. Triggers on "e2e test", "run e2e", "browser test", "smoke test", "e2e map", "map UI", "map selectors", "update mapping", "e2e walkthrough", "explore feature", "step through", "analyze trace", "e2e debug", "e2e skill", "playwright test", "record test", "e2e video".
 ---
 
 # E2E Dispatch — Unified Entry Point

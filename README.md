@@ -40,8 +40,11 @@ Human-guided browser exploration with trace recording and auto-generated flow ou
 | `/e2e-test <flow>` | Run a specific E2E test flow |
 | `/e2e-test --tag smoke` | Run all flows tagged with `smoke` |
 | `/e2e-test --suite <name>` | Run a named test suite |
-| `/e2e-walkthrough` | Interactive browser walkthrough |
+| `/e2e-test <flow> --video` | Run flow with video recording + GIF |
+| `/e2e-test <flow> --pr 940` | Run flow, record, post results to PR |
+| `/e2e-walkthrough` | Interactive walkthrough (records by default) |
 | `/e2e-walkthrough --smoke` | Auto-generated smoke walkthrough from mapping |
+| `/e2e-walkthrough --no-video` | Walkthrough without video recording |
 | `/e2e-dispatch` | Unified entry point (routes to the right skill) |
 | `/e2e-skill-ops` | Debug, maintain, or evaluate E2E skills |
 
@@ -347,8 +350,10 @@ The bug appears randomly — race conditions, timing issues, flaky state.
 | Artifact | Format | When |
 |----------|--------|------|
 | Accessibility snapshots | Text (a11y tree) | Every step |
-| Screenshots | PNG | On failure + optionally per step |
+| Screenshots | PNG | Every step (when recording) or on failure |
 | Annotated screenshots | PNG with labeled elements | On demand (`--annotate`) |
+| Video recording | WebM | Walkthroughs (default) or tests (`--video`) |
+| Steps GIF | GIF (800px, 1fps loop) | Auto-generated from per-step screenshots |
 | Network trace | JSONL HAR (trace.zip) | Per walkthrough/test run |
 | Console log | JSONL (trace.zip) | Per walkthrough/test run |
 | Trace analysis report | Markdown | After each trace |
@@ -357,13 +362,22 @@ The bug appears randomly — race conditions, timing issues, flaky state.
 
 ### Video recording
 
-The pipeline does **not** currently produce video files (MP4/WebM). What it does produce:
+The pipeline records browser viewport video (WebM) and generates step-by-step GIFs:
 
-- **Trace files** (`trace.zip`) that can be viewed as an interactive replay: `npx playwright show-trace trace.zip`
-- **Per-step screenshots** that document the visual state at each action
-- **Full network + console capture** for post-mortem analysis
+- **Walkthroughs** record by default (`--no-video` to skip)
+- **Tests** record when `--video` or `--pr` is passed
+- **GIF** auto-generated from per-step screenshots (800px, 1fps, looping)
+- **PR comments** embed the GIF inline with pass/fail summary
+- **Trace files** (`trace.zip`) provide interactive replay: `npx playwright show-trace trace.zip`
 
-Playwright's trace viewer provides a frame-by-frame replay with network waterfall, console log, and DOM snapshots — often more useful than video for debugging.
+Output per run:
+
+| File | Purpose |
+|------|---------|
+| `full.webm` | Complete viewport recording for debugging |
+| `steps.gif` | Step overview for communication (PR comments, Slack) |
+| `step-*.png` | Individual step screenshots |
+| `trace.zip` | Interactive replay with network waterfall and DOM snapshots |
 
 ---
 
