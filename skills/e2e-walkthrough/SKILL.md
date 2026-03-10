@@ -194,7 +194,7 @@ For detailed procedures (trace analysis, flow report, flow YAML rules, mapping s
 
 1. 發佈到 PR（gh pr comment <PR>）
 2. 發佈 flow report 到 PR
-3. 產生可重複使用的 flow YAML → /e2e-test 可 replay
+3. 編輯 flow YAML（已自動產生，可重新命名或調整步驟）
 4. 產出 GIF（步驟截圖動畫）
 5. 產出 WebM 錄影（完整 viewport）
 6. 產出 GIF + WebM（兩者都要）
@@ -203,14 +203,35 @@ For detailed procedures (trace analysis, flow report, flow YAML rules, mapping s
 
 - Options 4-6 only shown when recording was active
 - Options 1-2 only shown when `--pr` was provided or user mentioned a PR
-- Option 3 is always shown (flow YAML auto-generated, but user may want to rename/edit)
+- Option 3 is always shown (flow YAML already auto-generated — this option lets user rename/edit)
 - **Never close browser without explicit user confirmation**
 - Multiple selections allowed (e.g., "1, 3")
+
+### Pipeline Next Steps (MANDATORY — always shown after menu interaction)
+
+After the user completes their menu selection(s) — including selecting "結束" — present context-aware pipeline guidance:
+
+```
+💡 下一步可以：
+- `/e2e-test <flow-name>` — 自動重播此 walkthrough（flow 已儲存）
+{if anomalies found}
+- `/e2e-map --page <page>` — 重新掃描有過期 selector 的頁面
+{endif}
+- `/e2e-walkthrough` — 探索其他功能或頁面
+```
+
+**Rules:**
+- Always show `/e2e-test` replay line (flow YAML is always generated)
+- Show `/e2e-map` line ONLY when mapping discrepancies were found during this walkthrough
+- Always show `/e2e-walkthrough` continue line
+- Use the actual generated flow filename in the `/e2e-test` suggestion
+- This block appears BEFORE browser close confirmation — the user needs this info while deciding whether to continue
 
 ## Common Mistakes
 
 | Mistake | Fix |
 |---------|-----|
+| Skipping Pipeline Next Steps | MANDATORY block — present after every menu interaction, even under context pressure. "User already knows" is not a valid reason to skip. |
 | Headless mode for walkthrough | Always `--headed` — human must see browser |
 | Acting without snapshot | `snapshot` before every action — a11y tree is source of truth |
 | CSS selectors for clicks | Use `@ref` from snapshot. `role=` only for visibility checks |
