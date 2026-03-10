@@ -151,6 +151,128 @@ Agent returns: `analysis_path`, `api_failures`, `console_errors`, `clean` (true/
 
 Write `$REPORT_DIR/report.md`: summary table, step results with screenshots, issues found, health log, artifacts. Include the trace-analysis.md content from the subagent.
 
+### Flow Report (MANDATORY)
+
+Write `$REPORT_DIR/flow-report.md`. This report visualizes the walkthrough as a mermaid flowchart with natural language descriptions, enabling developers and team members to understand and adjust the explored flow.
+
+**File structure:**
+
+````markdown
+# Flow Report — <walkthrough context summary>
+
+**日期**: YYYY-MM-DD HH:MM
+**Mapping**: <mapping name>
+**模式**: guided|step|auto
+**結果**: 探索 N 個頁面、N 個對話框、N 個步驟 | N anomalies
+
+---
+
+## 流程總覽
+
+> <2-3 sentence summary>
+
+## 流程圖
+
+```mermaid
+flowchart TD
+    ...
+```
+
+## 逐步敘述
+
+### Step 1 — {source} → {target}
+...
+
+## 建議調整
+<!-- omit section entirely when 0 anomalies -->
+````
+
+#### Mermaid Node Types
+
+| UI concept | Syntax | Example |
+|------------|--------|---------|
+| Page | `["..."]` | `A["Dashboard"]` |
+| Dialog/Modal | `{{"..."}}` | `C{{"新增成員 Dialog"}}` |
+| Form submit | `(["..."])` | `F(["送出表單"])` |
+| Conditional branch | `{"..."}` | `D{"選擇角色"}` |
+
+#### Edge Rules
+
+- Label format: `"N. 動作摘要"` (N = step number)
+- Action summary ≤ 15 characters; truncate if longer
+- Return to same page: dashed arrow `-.->` to distinguish "forward" from "back to origin"
+- Same page appearing multiple times: reuse existing node (mermaid handles natively)
+
+#### Node ID Rules
+
+Use camelCase abbreviation of page name. Dialogs get `Dlg` suffix. Avoid mermaid reserved words.
+
+#### Cross-Site Flowchart
+
+Each site wrapped in `subgraph`, cross-site edges annotated with switch action:
+
+```mermaid
+flowchart TD
+    subgraph admin["admin-panel"]
+        A1["Users"] -->|"1. 建立使用者"| A2{{"Create User"}}
+        A2 -.->|"2. 送出"| A1
+    end
+    subgraph portal["customer-portal"]
+        P1["Users"] -->|"4. 確認使用者出現"| P2["User Detail"]
+    end
+    A1 -->|"3. 切換至 portal"| P1
+```
+
+#### Summary Generation
+
+- 2-3 sentences: starting page, main path, conclusion
+- Template: 「使用者從 `{start page}` 出發，{path summary}。{conclusion}。」
+- Conclusion auto-select:
+  - 0 anomalies → 「整體流程順暢，未發現異常。」
+  - Has anomalies → 「發現 N 處異常，詳見建議調整區。」
+  - Has health issues → 「發現 N 個 console error / API failure，詳見 trace analysis。」
+
+#### Step Narrative
+
+- Title: `### Step N — {source page} → {target page/element}`
+- Body: one paragraph — what action, where, what result
+- Result tag: `✅ PASS`, `⚠️ CONDITIONAL` (RBAC), `❌ FAIL`
+- On FAIL: one-sentence reason summary (no screenshot paths — those belong in report.md)
+
+#### Suggestions Section
+
+| Source | Suggestion |
+|--------|-----------|
+| Stale selector | 「Step N 的 `{element}` selector 可能過期，建議 `/e2e-map --page {page}`」 |
+| Missing element | 「Step N 預期的 `{element}` 未出現在 `{page}`，確認是否已移除或搬遷」 |
+| Trigger mismatch | 「Step N 的 `{element}` 互動行為與 mapping 不一致」 |
+| Console error | 「Step N 後出現 console error：`{message first 80 chars}`」 |
+| API failure | 「Step N 觸發 API 失敗：`{method} {path}` → `{status}`」 |
+| No anomalies | Omit the entire suggestions section |
+
+#### report.md Integration
+
+Add the following block at the top of `$REPORT_DIR/report.md` (before existing content):
+
+```markdown
+## Flow Report
+
+> 探索 N 頁面 / N 對話框 / N 步驟 — N anomalies
+> 詳見 [flow-report.md](./flow-report.md)
+
+---
+```
+
+#### PR Posting (menu option 2)
+
+When user selects "發佈 flow report 到 PR":
+
+```bash
+gh pr comment <PR> --body "$(cat $REPORT_DIR/flow-report.md)"
+```
+
+Mermaid renders natively in GitHub PR comments.
+
 ### Flow YAML Auto-Generation (MANDATORY)
 
 **Always auto-generate a flow file after walkthrough completes.** Do NOT ask "Save as reusable flow?" — always write the file. This is mandatory because the proposal pattern gets skipped under context pressure, losing valuable walkthrough data.
