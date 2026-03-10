@@ -173,7 +173,7 @@ agent-browser record start "$REPORT_DIR/full.webm"
 
 **Execute ALL subsections below in order. Do NOT skip to Browser Handoff.**
 
-For detailed procedures (trace analysis, flow YAML rules, mapping self-repair), see [reference.md](./reference.md).
+For detailed procedures (trace analysis, flow report, flow YAML rules, mapping self-repair), see [reference.md](./reference.md).
 
 1. **Stop recording** (if recording): `agent-browser record stop`
 2. **Stop trace**: `agent-browser trace stop "$REPORT_DIR/trace.zip"`
