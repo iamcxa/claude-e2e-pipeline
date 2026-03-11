@@ -154,6 +154,7 @@ If `trace.zip` doesn't exist (e.g., trace was never started), skip this phase.
 
 If recording was enabled, append:
 - `Recording: <path>/full.webm`
+- `Video: <path>/test-run.mp4` (1.5x speed, converted by agent)
 - `Steps GIF: <path>/steps.gif`
 
 **Batch:**

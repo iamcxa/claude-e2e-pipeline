@@ -101,6 +101,20 @@ ffmpeg -framerate 1 -pattern_type glob -i "$REPORT_DIR/step-*.png" \
 - If ffmpeg fails (no screenshots, missing binary), warn but continue — GIF is optional
 - **Verify**: `test -s "$REPORT_DIR/steps.gif"` (exists and size > 0)
 
+## MP4 Video Conversion (from WebM recording)
+
+```bash
+ffmpeg -i "$REPORT_DIR/full.webm" -filter:v "setpts=PTS/1.5" \
+  -an -c:v libx264 -pix_fmt yuv420p -y "$REPORT_DIR/walkthrough.mp4"
+```
+
+- **Default speed: 1.5x** (`setpts=PTS/1.5`). Override: 2x = `PTS/2`, 1x = `PTS/1`
+- `-an` strips audio (browser recordings have no useful audio)
+- `-pix_fmt yuv420p` ensures GitHub/browser/Slack compatibility
+- If ffmpeg fails, warn but continue — MP4 is optional (WebM still available)
+- **Verify**: `test -s "$REPORT_DIR/walkthrough.mp4"` (exists and size > 0)
+- For test runner: output name is `test-run.mp4` instead of `walkthrough.mp4`
+
 ## Semantic Locators (alternative to @ref)
 
 ```bash

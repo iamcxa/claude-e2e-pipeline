@@ -181,11 +181,12 @@ For detailed procedures (trace analysis, flow report, flow YAML rules, mapping s
 4. **Report**: Write `$REPORT_DIR/report.md` with summary, step results, health log, media links. Include Flow Report summary at top (see step 5).
 5. **Flow Report (MANDATORY)**: Write `$REPORT_DIR/flow-report.md` with mermaid flowchart + natural language step descriptions. See [reference.md](./reference.md) § Flow Report for generation rules.
 6. **GIF generation** (if recording): see `references/commands.md` § GIF Generation for the canonical ffmpeg command. Warn but continue if ffmpeg fails.
-7. **Flow YAML auto-generation (MANDATORY)**: Always auto-generate — never ask. Auto-name: `walkthrough-<timestamp>-<first-page>.yaml`. Write to `.claude/e2e/flows/`
-8. **Cross-site flow**: Use `sites:` instead of `mapping:` when `--sites` was used
-9. **PR/Issue posting**: `--pr` → `gh pr comment`, `--issue` → Linear MCP
-10. **Mapping self-repair**: Present discrepancy list, human approves, patch mapping. 3+ stale on same page → recommend `/e2e-map --page`
-11. **Browser handoff (BLOCKING: flow YAML + flow report must be written first)**: Present summary table, then numbered action menu. Do NOT close browser — user may need to inspect final state.
+7. **MP4 video conversion** (if recording): see `references/commands.md` § MP4 Video Conversion. Default 1.5x speed. Warn but continue if ffmpeg fails.
+8. **Flow YAML auto-generation (MANDATORY)**: Always auto-generate — never ask. Auto-name: `walkthrough-<timestamp>-<first-page>.yaml`. Write to `.claude/e2e/flows/`
+9. **Cross-site flow**: Use `sites:` instead of `mapping:` when `--sites` was used
+10. **PR/Issue posting**: `--pr` → `gh pr comment` using PR comment template (see [reference.md](./reference.md) § PR Comment Template), `--issue` → Linear MCP
+11. **Mapping self-repair**: Present discrepancy list, human approves, patch mapping. 3+ stale on same page → recommend `/e2e-map --page`
+12. **Browser handoff (BLOCKING: flow YAML + flow report must be written first)**: Present summary table, then numbered action menu. Do NOT close browser — user may need to inspect final state.
 
 **Post-completion menu** (always present, numbered):
 

@@ -340,6 +340,40 @@ Each step's `site:` is set based on which session was active during that walkthr
 - `--pr`: `gh pr comment N --body-file pr-summary.md`
 - `--issue`: Linear MCP `create_comment`
 
+**PR Comment Template** (`--pr` mode):
+
+```markdown
+## E2E Walkthrough Verification Report
+
+### Walkthrough [A/B/...]: [場景名稱] ([N] scenarios)
+
+**Flow:** [User journey 一句話描述]
+
+| Step | Screenshot | What happens |
+|------|-----------|-------------|
+| 1. [步驟名稱] | ![step1](<screenshot-github-url>) | [發生了什麼] |
+| 2. ... | ... | ... |
+
+<details>
+<summary>Video recording (M:SS)</summary>
+
+<!-- 👇 DRAG-DROP video.mp4 HERE (replace this line) -->
+Video file: `$REPORT_DIR/walkthrough.mp4`
+
+</details>
+
+---
+
+### Summary
+
+- [N] scenarios verified: [結果摘要]
+- No console errors or network failures observed in traces
+```
+
+- **Screenshot URLs**: Upload to PR branch, use `https://github.com/<org>/<repo>/blob/<branch>/<path>?raw=true`
+- **Video**: MP4 cannot auto-embed — use `<details>` with drag-drop placeholder
+- **Multiple scenarios**: Group under one walkthrough section with lettered sub-scenarios (B, C)
+
 ### Mapping Self-Repair
 
 During the walkthrough, track every mapping discrepancy:

@@ -328,6 +328,17 @@ agent-browser trace stop "{{report_dir}}/trace.zip"
 
 **Order matters**: record stop → trace stop → (do NOT close browser).
 
+### 3a2. Video Conversion (if recording)
+
+```bash
+ffmpeg -i "{{report_dir}}/full.webm" -filter:v "setpts=PTS/1.5" \
+  -an -c:v libx264 -pix_fmt yuv420p -y "{{report_dir}}/test-run.mp4" 2>/dev/null \
+  && echo "Video: {{report_dir}}/test-run.mp4" \
+  || echo "ffmpeg not available, skipping video conversion"
+```
+
+Default 1.5x speed. Skip gracefully if ffmpeg missing.
+
 ### 3b. Do NOT Close Browser
 
 The human may want to inspect the browser state after the test. Leave it open.
