@@ -153,13 +153,15 @@ Human adjusts the plan via natural conversation:
 
 For detailed execution mechanics (startup, multi-site, per-step loop, health checks, anomaly handling), see [reference.md](./reference.md).
 
-**Summary**: Open browser → verify auth → start trace → **start recording** → execute steps in chosen interaction mode → track mapping discrepancies.
+**Summary**: Open browser (without `--profile` when recording) → verify auth (auto-login if needed) → **start recording** → start trace → execute steps in chosen interaction mode → track mapping discrepancies.
 
 **Start recording** (unless `--no-video`):
 
 ```bash
 agent-browser record start "$REPORT_DIR/full.webm"
 ```
+
+> **Note**: `record start` is incompatible with `--profile` sessions (v0.16.x). When recording is ON, open the browser WITHOUT `--profile` and handle auth via auto-login or manual prompt. See [reference.md](./reference.md) § Startup for details.
 
 **Per-step loop**: snapshot → action via `@ref` → wait networkidle → screenshot → health check → report to human.
 
@@ -191,15 +193,15 @@ For detailed procedures (trace analysis, flow report, flow YAML rules, mapping s
 **Post-completion menu** (always present, numbered):
 
 ```
-接下來要做什麼？
+What's next?
 
-1. 發佈到 PR（gh pr comment <PR>）
-2. 發佈 flow report 到 PR
-3. 編輯 flow YAML（已自動產生，可重新命名或調整步驟）
-4. 產出 GIF（步驟截圖動畫）
-5. 產出 WebM 錄影（完整 viewport）
-6. 產出 GIF + WebM（兩者都要）
-7. 結束（browser 保持開啟）
+1. Post to PR (gh pr comment <PR>)
+2. Post flow report to PR
+3. Edit flow YAML (already auto-generated — rename or adjust steps)
+4. Generate GIF (step screenshot animation)
+5. Generate video recording (full viewport)
+6. Generate GIF + video (both)
+7. Done (browser stays open)
 ```
 
 - Options 4-6 only shown when recording was active
@@ -210,15 +212,15 @@ For detailed procedures (trace analysis, flow report, flow YAML rules, mapping s
 
 ### Pipeline Next Steps (MANDATORY — always shown after menu interaction)
 
-After the user completes their menu selection(s) — including selecting "結束" — present context-aware pipeline guidance:
+After the user completes their menu selection(s) — including selecting "Done" — present context-aware pipeline guidance:
 
 ```
-💡 下一步可以：
-- `/e2e-test <flow-name>` — 自動重播此 walkthrough（flow 已儲存）
+Next steps:
+- `/e2e-test <flow-name>` — replay this walkthrough automatically (flow saved)
 {if anomalies found}
-- `/e2e-map --page <page>` — 重新掃描有過期 selector 的頁面
+- `/e2e-map --page <page>` — re-scan pages with stale selectors
 {endif}
-- `/e2e-walkthrough` — 探索其他功能或頁面
+- `/e2e-walkthrough` — explore other features or pages
 ```
 
 **Rules:**

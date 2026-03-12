@@ -55,6 +55,8 @@ When ANY e2e skill changes, scan every row:
 | `e2e-pipeline` plugin: `skills/e2e-test/SKILL.md` | Auth flow, expect grammar, action patterns, common mistakes |
 | `e2e-pipeline` plugin: `skills/e2e-map/SKILL.md` | Mapping format, selector conventions, common mistakes |
 | `e2e-pipeline` plugin: `skills/e2e-walkthrough/SKILL.md` | Auth flow, smoke mode, self-repair, common mistakes |
+| `e2e-pipeline` plugin: `skills/*/reference.md` | Execution details, output procedures, templates |
+| `e2e-pipeline` plugin: `agents/` | `e2e-test-runner.md`, `e2e-mapper.md`, `e2e-trace-analyzer.md` — startup flow, auth, recording |
 | `e2e-pipeline` plugin: `references/` | `commands.md`, `common-patterns.md` |
 | `<project>/.claude/e2e/mappings/*.yaml` | Selector conventions match skill guidance |
 | `<project>/e2e-reports/skill-quality-findings.md` | Past findings for this exact pattern |
@@ -115,4 +117,4 @@ If verification fails, loop back to `--debug`. Write-back is not optional — at
 | Verify full suite | `/e2e-test --suite smoke` |
 | View trace interactively | `npx playwright show-trace <trace.zip>` |
 
-<!-- Last updated: 2026-03-09 -->
+<!-- Last updated: 2026-03-12 -->

@@ -20,7 +20,20 @@ Before opening a new browser session, check for stale sessions from previous ski
 
 ```bash
 REPORT_DIR="$(pwd)/e2e-reports/$(date +%Y%m%d-%H%M%S)" && mkdir -p "$REPORT_DIR"
-agent-browser --profile ~/.agent-browser/<app> --headed open <base_url>
+```
+
+**Recording-aware browser open** (agent-browser v0.16.x `record` is incompatible with `--profile`):
+
+- **Recording OFF** (`--no-video`): Use `--profile` as normal.
+  ```bash
+  agent-browser --profile ~/.agent-browser/<app> --headed open <base_url>
+  ```
+- **Recording ON** (default): Open WITHOUT `--profile`, then handle auth.
+  ```bash
+  agent-browser --headed open <base_url>
+  ```
+
+```bash
 agent-browser wait --load networkidle
 ```
 
@@ -28,12 +41,25 @@ agent-browser wait --load networkidle
 ```bash
 agent-browser get url
 ```
-Check URL against `auth.verification` condition. If verification fails (auth expired):
-1. Read `auth.manual_prompt` from mapping and present to user
-2. Browser is already `--headed` — user logs in directly
-3. After user confirms → `agent-browser get url` and re-check
-4. Repeat until verified or user aborts
+Check URL against `auth.verification` condition. If verification fails (auth expired or no profile):
 
+1. **Auto-login path** (preferred): If mapping has `auth.test_accounts` with email/password, use snapshot + fill to login automatically:
+   ```bash
+   agent-browser snapshot -i          # Find email/password fields
+   agent-browser fill @<email> "<test_account_email>"
+   agent-browser fill @<password> "<test_account_password>"
+   agent-browser click @<submit>      # Login button
+   agent-browser wait --load networkidle
+   agent-browser get url              # Re-verify
+   ```
+2. **Manual path** (fallback): Read `auth.manual_prompt` from mapping and present to user. Browser is already `--headed` — user logs in directly. After user confirms → `agent-browser get url` and re-check. Repeat until verified or user aborts.
+
+**Start recording** (if recording ON):
+```bash
+agent-browser record start "$REPORT_DIR/full.webm"
+```
+
+**Start trace** (after recording — trace captures internal data, recording captures visual viewport):
 ```bash
 agent-browser trace start
 ```
@@ -160,30 +186,30 @@ Write `$REPORT_DIR/flow-report.md`. This report visualizes the walkthrough as a 
 ````markdown
 # Flow Report — <walkthrough context summary>
 
-**日期**: YYYY-MM-DD HH:MM
+**Date**: YYYY-MM-DD HH:MM
 **Mapping**: <mapping name>
-**模式**: guided|step|auto
-**結果**: 探索 N 個頁面、N 個對話框、N 個步驟 | N anomalies
+**Mode**: guided|step|auto
+**Result**: Explored N pages, N dialogs, N steps | N anomalies
 
 ---
 
-## 流程總覽
+## Overview
 
 > <2-3 sentence summary>
 
-## 流程圖
+## Flowchart
 
 ```mermaid
 flowchart TD
     ...
 ```
 
-## 逐步敘述
+## Step-by-Step Narrative
 
 ### Step 1 — {source} → {target}
 ...
 
-## 建議調整
+## Suggested Adjustments
 <!-- omit section entirely when 0 anomalies -->
 ````
 
@@ -192,14 +218,14 @@ flowchart TD
 | UI concept | Syntax | Example |
 |------------|--------|---------|
 | Page | `["..."]` | `A["Dashboard"]` |
-| Dialog/Modal | `{{"..."}}` | `C{{"新增成員 Dialog"}}` |
-| Form submit | `(["..."])` | `F(["送出表單"])` |
-| Conditional branch | `{"..."}` | `D{"選擇角色"}` |
+| Dialog/Modal | `{{"..."}}` | `C{{"Add Member Dialog"}}` |
+| Form submit | `(["..."])` | `F(["Submit Form"])` |
+| Conditional branch | `{"..."}` | `D{"Select Role"}` |
 
 #### Edge Rules
 
-- Label format: `"N. 動作摘要"` (N = step number)
-- Action summary ≤ 15 characters; truncate if longer
+- Label format: `"N. action summary"` (N = step number)
+- Action summary: max 15 characters; truncate if longer
 - Return to same page: dashed arrow `-.->` to distinguish "forward" from "back to origin"
 - Same page appearing multiple times: reuse existing node (mermaid handles natively)
 
@@ -214,40 +240,40 @@ Each site wrapped in `subgraph`, cross-site edges annotated with switch action:
 ```mermaid
 flowchart TD
     subgraph admin["admin-panel"]
-        A1["Users"] -->|"1. 建立使用者"| A2{{"Create User"}}
-        A2 -.->|"2. 送出"| A1
+        A1["Users"] -->|"1. Create user"| A2{{"Create User"}}
+        A2 -.->|"2. Submit"| A1
     end
     subgraph portal["customer-portal"]
-        P1["Users"] -->|"4. 確認使用者出現"| P2["User Detail"]
+        P1["Users"] -->|"4. Verify user appears"| P2["User Detail"]
     end
-    A1 -->|"3. 切換至 portal"| P1
+    A1 -->|"3. Switch to portal"| P1
 ```
 
 #### Summary Generation
 
 - 2-3 sentences: starting page, main path, conclusion
-- Template: 「使用者從 `{start page}` 出發，{path summary}。{conclusion}。」
+- Template: "Starting from `{start page}`, {path summary}. {conclusion}."
 - Conclusion auto-select:
-  - 0 anomalies → 「整體流程順暢，未發現異常。」
-  - Has anomalies → 「發現 N 處異常，詳見建議調整區。」
-  - Has health issues → 「發現 N 個 console error / API failure，詳見 trace analysis。」
+  - 0 anomalies: "All flows passed smoothly with no anomalies."
+  - Has anomalies: "Found N anomalies — see Suggested Adjustments."
+  - Has health issues: "Found N console errors / API failures — see trace analysis."
 
 #### Step Narrative
 
 - Title: `### Step N — {source page} → {target page/element}`
 - Body: one paragraph — what action, where, what result
-- Result tag: `✅ PASS`, `⚠️ CONDITIONAL` (RBAC), `❌ FAIL`
+- Result tag: `PASS`, `CONDITIONAL` (RBAC), `FAIL`
 - On FAIL: one-sentence reason summary (no screenshot paths — those belong in report.md)
 
 #### Suggestions Section
 
 | Source | Suggestion |
 |--------|-----------|
-| Stale selector | 「Step N 的 `{element}` selector 可能過期，建議 `/e2e-map --page {page}`」 |
-| Missing element | 「Step N 預期的 `{element}` 未出現在 `{page}`，確認是否已移除或搬遷」 |
-| Trigger mismatch | 「Step N 的 `{element}` 互動行為與 mapping 不一致」 |
-| Console error | 「Step N 後出現 console error：`{message first 80 chars}`」 |
-| API failure | 「Step N 觸發 API 失敗：`{method} {path}` → `{status}`」 |
+| Stale selector | "Step N: `{element}` selector may be stale. Consider `/e2e-map --page {page}`." |
+| Missing element | "Step N: expected `{element}` not found on `{page}`. Verify if removed or relocated." |
+| Trigger mismatch | "Step N: `{element}` interaction behavior differs from mapping." |
+| Console error | "Step N: console error — `{message first 80 chars}`" |
+| API failure | "Step N: API failure — `{method} {path}` → `{status}`" |
 | No anomalies | Omit the entire suggestions section |
 
 #### report.md Integration
@@ -257,15 +283,15 @@ Add the following block at the top of `$REPORT_DIR/report.md` (before existing c
 ```markdown
 ## Flow Report
 
-> 探索 N 頁面 / N 對話框 / N 步驟 — N anomalies
-> 詳見 [flow-report.md](./flow-report.md)
+> Explored N pages / N dialogs / N steps — N anomalies
+> See [flow-report.md](./flow-report.md)
 
 ---
 ```
 
 #### PR Posting (menu option 2)
 
-When user selects "發佈 flow report 到 PR":
+When user selects "Post flow report to PR":
 
 ```bash
 gh pr comment <PR> --body "$(cat $REPORT_DIR/flow-report.md)"
@@ -345,14 +371,16 @@ Each step's `site:` is set based on which session was active during that walkthr
 ```markdown
 ## E2E Walkthrough Verification Report
 
-### Walkthrough [A/B/...]: [場景名稱] ([N] scenarios)
+[1-2 sentence overview: what was verified and which scenarios were covered]
 
-**Flow:** [User journey 一句話描述]
+### Walkthrough A: [scenario name]
+
+**Flow:** [one-sentence user journey description]
 
 | Step | Screenshot | What happens |
 |------|-----------|-------------|
-| 1. [步驟名稱] | ![step1](<screenshot-github-url>) | [發生了什麼] |
-| 2. ... | ... | ... |
+| 1. [step name] | ![step1](<screenshot-github-url>) | [what happened] |
+| 2. [step name] | ![step2](<screenshot-github-url>) | [what happened] |
 
 <details>
 <summary>Video recording (M:SS)</summary>
@@ -362,17 +390,31 @@ Video file: `$REPORT_DIR/walkthrough.mp4`
 
 </details>
 
+### Walkthrough B: [scenario name]
+
+**Flow:** [one-sentence user journey description]
+
+| Step | Screenshot | What happens |
+|------|-----------|-------------|
+| 1. [step name] | ![step1](<screenshot-github-url>) | [what happened] |
+| 2. [step name] | ![step2](<screenshot-github-url>) | [what happened] |
+
 ---
 
 ### Summary
 
-- [N] scenarios verified: [結果摘要]
+- [N] scenarios verified: [result summary]
 - No console errors or network failures observed in traces
 ```
 
+**Template rules:**
+
+- **Step table is the core structure** — Every walkthrough and sub-scenario MUST have a full 3-column `Step | Screenshot | What happens` table. This lets reviewers see key frame changes at a glance. Never use a simplified 2-column table.
+- **One section per scenario** — Each scenario gets its own `### Walkthrough [A/B/C/...]` section with a complete step table. Do not nest sub-scenarios within a parent section using different formats.
+- **Intro paragraph** — Follow the `## E2E Walkthrough Verification Report` heading with a 1-2 sentence overview of what was verified.
 - **Screenshot URLs**: Upload to PR branch, use `https://github.com/<org>/<repo>/blob/<branch>/<path>?raw=true`
-- **Video**: MP4 cannot auto-embed — use `<details>` with drag-drop placeholder
-- **Multiple scenarios**: Group under one walkthrough section with lettered sub-scenarios (B, C)
+- **Video**: MP4 cannot auto-embed — use `<details>` with drag-drop placeholder. One video block per walkthrough. If multiple scenarios share one recording, place the video block after the last related scenario.
+- **Summary** — Always last. Bullet points summarizing results across all scenarios.
 
 ### Mapping Self-Repair
 

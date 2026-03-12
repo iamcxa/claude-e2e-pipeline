@@ -88,6 +88,8 @@ agent-browser record restart "<abs-path.webm>"       # Stop current + start new 
 - Creates a fresh browser context but preserves cookies and localStorage
 - If no URL provided to `start`, records current page
 
+**Known limitation (v0.16.x):** `record start` is incompatible with `--profile` sessions. When the browser was opened with `--profile`, `record start` fails with "Browser not launched." **Workaround:** Open without `--profile` and handle auth manually (auto-login via fill commands or manual prompt). See walkthrough reference.md and test-runner agent for recording-aware startup procedures.
+
 ## GIF Generation (from per-step screenshots)
 
 ```bash

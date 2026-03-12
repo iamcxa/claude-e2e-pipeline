@@ -101,8 +101,18 @@ agent-browser get url 2>/dev/null
 
 ### 1c. Open Browser
 
+**Recording-aware open** (agent-browser v0.16.x `record` is incompatible with `--profile`):
+
+- **Recording OFF** (`record` is `false` or absent):
+  ```bash
+  agent-browser --profile {{auth_profile}} --headed open {{base_url}}
+  ```
+- **Recording ON** (`record` is `true`): Open WITHOUT `--profile`:
+  ```bash
+  agent-browser --headed open {{base_url}}
+  ```
+
 ```bash
-agent-browser --profile {{auth_profile}} --headed open {{base_url}}
 agent-browser wait --load networkidle
 ```
 
@@ -119,17 +129,11 @@ agent-browser get url
 Check against mapping's `auth.verification` condition:
 - `url_not_contains: "/login"` -> verify URL does NOT contain "/login"
 
-If auth check FAILS -> report "Auth expired. Please re-login in the headed browser." and **STOP**. Do not attempt re-auth. The orchestrator handles that.
+If auth check FAILS:
+1. **Auto-login** (if mapping has `auth.test_accounts` with email/password): Use snapshot + fill to login automatically. Find email/password fields via `snapshot -i`, fill with test account credentials, click submit, wait networkidle, re-verify URL.
+2. **No test accounts**: Report "Auth expired. Please re-login in the headed browser." and **STOP**. Do not attempt re-auth. The orchestrator handles that.
 
-### 1e. Start Tracing
-
-```bash
-agent-browser trace start
-agent-browser console --clear 2>&1 || true
-agent-browser errors --clear 2>&1 || true
-```
-
-### 1f. Start Recording (conditional)
+### 1e. Start Recording (conditional)
 
 If `record` is `true`:
 
@@ -137,7 +141,15 @@ If `record` is `true`:
 agent-browser record start "{{report_dir}}/full.webm"
 ```
 
-Start recording AFTER trace start. The trace captures internal data; the recording captures the visual viewport.
+Start recording BEFORE trace start. Recording must start first because `record` creates a fresh browser context.
+
+### 1f. Start Tracing
+
+```bash
+agent-browser trace start
+agent-browser console --clear 2>&1 || true
+agent-browser errors --clear 2>&1 || true
+```
 
 ---
 
