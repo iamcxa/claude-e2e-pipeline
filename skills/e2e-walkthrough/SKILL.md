@@ -175,40 +175,38 @@ agent-browser record start "$REPORT_DIR/full.webm"
 
 **Execute ALL subsections below in order. Do NOT skip to Browser Handoff.**
 
-For detailed procedures (trace analysis, flow report, flow YAML rules, mapping self-repair), see [reference.md](./reference.md).
+For detailed procedures (trace analysis, report templates, flow YAML rules, mapping self-repair), see [reference.md](./reference.md).
 
 1. **Stop recording** (if recording): `agent-browser record stop`
 2. **Stop trace**: `agent-browser trace stop "$REPORT_DIR/trace.zip"`
 3. **Trace analysis**: Dispatch `e2e-trace-analyzer` subagent with `trace_path` + `report_dir`
-4. **Report**: Write `$REPORT_DIR/report.md` with summary, step results, health log, media links. Include Flow Report summary at top (see step 5).
-5. **Flow Report (MANDATORY)**: Write `$REPORT_DIR/flow-report.md` with mermaid flowchart + natural language step descriptions. See [reference.md](./reference.md) § Flow Report for generation rules.
-6. **GIF generation** (if recording): see `references/commands.md` § GIF Generation for the canonical ffmpeg command. Warn but continue if ffmpeg fails.
-7. **MP4 video conversion** (if recording): see `references/commands.md` § MP4 Video Conversion. Default 1.5x speed. Warn but continue if ffmpeg fails.
-8. **Flow YAML auto-generation (MANDATORY)**: Always auto-generate — never ask. Auto-name: `walkthrough-<timestamp>-<first-page>.yaml`. Write to `.claude/e2e/flows/`
-9. **Cross-site flow**: Use `sites:` instead of `mapping:` when `--sites` was used
-10. **PR/Issue posting**: `--pr` → `gh pr comment` using PR comment template (see [reference.md](./reference.md) § PR Comment Template), `--issue` → Linear MCP
-11. **Mapping self-repair**: Present discrepancy list, human approves, patch mapping. 3+ stale on same page → recommend `/e2e-map --page`
-12. **Browser handoff (BLOCKING: flow YAML + flow report must be written first)**: Present summary table, then numbered action menu. Do NOT close browser — user may need to inspect final state.
+4. **Report (dual output, MANDATORY)**: Write both `$REPORT_DIR/report.md` (full artifact: flowchart + step results + health log + observations + artifacts) and `$REPORT_DIR/pr-summary.md` (PR reviewer version: inline screenshots + flowchart + step table + video). See [reference.md](./reference.md) § Report for templates.
+5. **GIF generation** (if recording): see `references/commands.md` § GIF Generation for the canonical ffmpeg command. Warn but continue if ffmpeg fails.
+6. **MP4 video conversion** (if recording): see `references/commands.md` § MP4 Video Conversion. Default 1.5x speed. Warn but continue if ffmpeg fails.
+7. **Flow YAML auto-generation (MANDATORY)**: Always auto-generate — never ask. Auto-name: `walkthrough-<timestamp>-<first-page>.yaml`. Write to `.claude/e2e/flows/`
+8. **Cross-site flow**: Use `sites:` instead of `mapping:` when `--sites` was used
+9. **PR/Issue posting**: If `--pr` provided, ask user to confirm → commit + push screenshots → `gh pr comment` with `pr-summary.md`. See [reference.md](./reference.md) § PR/Issue Posting.
+10. **Mapping self-repair**: Present discrepancy list, human approves, patch mapping. 3+ stale on same page → recommend `/e2e-map --page`
+11. **Browser handoff (BLOCKING: report + flow YAML must be written first)**: Present summary table, then numbered action menu. Do NOT close browser — user may need to inspect final state.
 
 **Post-completion menu** (always present, numbered):
 
 ```
 What's next?
 
-1. Post to PR (gh pr comment <PR>)
-2. Post flow report to PR
-3. Edit flow YAML (already auto-generated — rename or adjust steps)
-4. Generate GIF (step screenshot animation)
-5. Generate video recording (full viewport)
-6. Generate GIF + video (both)
-7. Done (browser stays open)
+1. Post report to PR (pr-summary.md → gh pr comment)
+2. Edit flow YAML (already auto-generated — rename or adjust steps)
+3. Generate GIF (step screenshot animation)
+4. Generate video recording (full viewport)
+5. Generate GIF + video (both)
+6. Done (browser stays open)
 ```
 
-- Options 4-6 only shown when recording was active
-- Options 1-2 only shown when `--pr` was provided or user mentioned a PR
-- Option 3 is always shown (flow YAML already auto-generated — this option lets user rename/edit)
+- Options 3-5 only shown when recording was active
+- Option 1 only shown when `--pr` was provided or user mentioned a PR
+- Option 2 is always shown (flow YAML already auto-generated — this option lets user rename/edit)
 - **Never close browser without explicit user confirmation**
-- Multiple selections allowed (e.g., "1, 3")
+- Multiple selections allowed (e.g., "1, 2")
 
 ### Pipeline Next Steps (MANDATORY — always shown after menu interaction)
 

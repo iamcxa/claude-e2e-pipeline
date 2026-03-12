@@ -173,29 +173,31 @@ Agent(subagent_type="e2e-trace-analyzer"):
 
 Agent returns: `analysis_path`, `api_failures`, `console_errors`, `clean` (true/false).
 
-### Report
+### Report (Dual Output)
 
-Write `$REPORT_DIR/report.md`: summary table, step results with screenshots, issues found, health log, artifacts. Include the trace-analysis.md content from the subagent.
+Both `report.md` and `pr-summary.md` are auto-generated in Phase 4 to `$REPORT_DIR/`. They share the same walkthrough data but serve different audiences.
 
-### Flow Report (MANDATORY)
+| File | Purpose | Audience |
+|------|---------|----------|
+| `report.md` | Complete walkthrough record with all details | Artifacts, future reference, debugging |
+| `pr-summary.md` | Visual summary with inline screenshots | PR reviewers, team sharing |
 
-Write `$REPORT_DIR/flow-report.md`. This report visualizes the walkthrough as a mermaid flowchart with natural language descriptions, enabling developers and team members to understand and adjust the explored flow.
+Both files are MANDATORY. Always generate both, regardless of whether `--pr` was provided.
 
-**File structure:**
+#### `report.md` — Full Artifact Report
 
 ````markdown
-# Flow Report — <walkthrough context summary>
+# E2E Walkthrough Report: <walkthrough-name>
 
-**Date**: YYYY-MM-DD HH:MM
-**Mapping**: <mapping name>
-**Mode**: guided|step|auto
-**Result**: Explored N pages, N dialogs, N steps | N anomalies
+**Date:** <YYYY-MM-DD HH:MM>
+**Flow:** `<flow-yaml-filename>`
+**Branch:** `<branch>`
+**Mapping:** `<mapping-name>`
+**Result:** <PASS/FAIL> (<N/M steps>)
 
----
+## Summary
 
-## Overview
-
-> <2-3 sentence summary>
+<2-3 sentence overview: starting page, main path, conclusion>
 
 ## Flowchart
 
@@ -204,16 +206,100 @@ flowchart TD
     ...
 ```
 
-## Step-by-Step Narrative
+## Step Results
 
-### Step 1 — {source} → {target}
-...
+| Step | Action | Expected | Result |
+|------|--------|----------|--------|
+| <step-id> | <action summary> | <expectation summary> | PASS/FAIL |
 
-## Suggested Adjustments
-<!-- omit section entirely when 0 anomalies -->
+## Health Log
+
+| Check | Result |
+|-------|--------|
+| API failures | <N> |
+| Console errors | <N> |
+| Trace status | Clean / <issue summary> |
+
+<if non-noise failures exist, add detail paragraph distinguishing app issues from infra noise>
+
+## Observations
+
+1. **<finding title>** — <finding detail>
+
+## Artifacts
+
+| File | Description |
+|------|-------------|
+| `<filename>` | <description> |
 ````
 
-#### Mermaid Node Types
+**Section rules:**
+
+- **Summary**: 2-3 sentences. Template: "Starting from `{start page}`, {path summary}. {conclusion}." Conclusion auto-select: 0 anomalies → "All steps passed." / has anomalies → "Found N issues — see Observations." / has health issues → "Found N console errors / API failures — see Health Log."
+- **Flowchart**: Covers the complete walkthrough path. See § Flowchart Rules below.
+- **Step Results**: One row per walkthrough step. Action = concise verb phrase. Expected = shortened expectation from flow. Result = PASS, FAIL, SKIP, or CONDITIONAL (RBAC).
+- **Health Log**: Integrate trace-analysis.md content. Always show the 3-row table. If all clean, values are `0 / 0 / Clean`. If failures exist, add a paragraph after the table explaining each — distinguish app issues from infra noise (e.g., Sentry 429 rate limiting).
+- **Observations**: Key behavioral findings. Focus on: bug status (reproduced / not reproduced vs prior sessions), agent behavior patterns (turn count, tool usage, skipped steps), UX quality (suggestion chips, confirmation flows), deviations from expected flow YAML. **Omit section entirely** if walkthrough was purely mechanical with no notable findings.
+- **Artifacts**: All files in `$REPORT_DIR/` — screenshots, trace.zip, trace-analysis.md, video files. One row per file.
+
+#### `pr-summary.md` — PR Comment Report
+
+````markdown
+## E2E Walkthrough Verification Report
+
+<1-2 sentence overview: what was verified and which scenarios were covered>
+
+### <Scenario Name> (<N turns/steps>)
+
+**Flow:** <one-sentence user journey description>
+
+## Flowchart
+
+```mermaid
+flowchart TD
+    ...
+```
+
+| Step | Screenshot | What happens |
+|------|-----------|-------------|
+| 1. <step name> | ![step1](<screenshot-github-url>) | <what happened> |
+| 2. <step name> | ![step2](<screenshot-github-url>) | <what happened> |
+
+<details>
+<summary>Video recording (M:SS)</summary>
+
+<!-- 👇 DRAG-DROP video.mp4 HERE (replace this line) -->
+Video file: `$REPORT_DIR/<video-filename>`
+
+</details>
+
+---
+
+### Summary
+
+| Flow | User Turns | Result | Trace |
+|------|:----------:|:------:|:-----:|
+| <flow name> | <N> | PASS/FAIL | Clean / <note> |
+
+**Key findings:**
+- <bullet points summarizing results across all scenarios>
+````
+
+**PR summary rules:**
+
+- **Step table is the core structure** — Every scenario MUST have a 3-column `Step | Screenshot | What happens` table. This lets reviewers see key frame changes at a glance.
+- **Flowchart** — Include the same mermaid flowchart from `report.md`. GitHub renders mermaid natively in PR comments. Place after the flow description, before the step table.
+- **One section per scenario** — Each scenario gets its own `### <Name>` section with flowchart + step table.
+- **Screenshot URLs**: `https://github.com/<org>/<repo>/blob/<branch>/<path>?raw=true`. Screenshots must be committed and pushed to the branch before URLs will render.
+- **Video**: MP4 cannot auto-embed in GitHub — use `<details>` with drag-drop placeholder. One video block per scenario.
+- **Summary table** — Always last. One row per flow with turn count, result, trace status.
+- **Key findings** — Bullet points highlighting the most important outcomes (bug fixes, behavior changes, regressions).
+
+#### Flowchart Rules
+
+Both `report.md` and `pr-summary.md` use the same flowchart. Generate once, include in both.
+
+**Mermaid Node Types:**
 
 | UI concept | Syntax | Example |
 |------------|--------|---------|
@@ -221,19 +307,20 @@ flowchart TD
 | Dialog/Modal | `{{"..."}}` | `C{{"Add Member Dialog"}}` |
 | Form submit | `(["..."])` | `F(["Submit Form"])` |
 | Conditional branch | `{"..."}` | `D{"Select Role"}` |
+| Final result (PASS) | `["..."]` with style | `G["PASS"]` + `style G fill:#4caf50,color:white` |
 
-#### Edge Rules
+**Edge Rules:**
 
 - Label format: `"N. action summary"` (N = step number)
 - Action summary: max 15 characters; truncate if longer
 - Return to same page: dashed arrow `-.->` to distinguish "forward" from "back to origin"
 - Same page appearing multiple times: reuse existing node (mermaid handles natively)
 
-#### Node ID Rules
+**Node ID Rules:**
 
 Use camelCase abbreviation of page name. Dialogs get `Dlg` suffix. Avoid mermaid reserved words.
 
-#### Cross-Site Flowchart
+**Cross-Site Flowchart:**
 
 Each site wrapped in `subgraph`, cross-site edges annotated with switch action:
 
@@ -248,56 +335,6 @@ flowchart TD
     end
     A1 -->|"3. Switch to portal"| P1
 ```
-
-#### Summary Generation
-
-- 2-3 sentences: starting page, main path, conclusion
-- Template: "Starting from `{start page}`, {path summary}. {conclusion}."
-- Conclusion auto-select:
-  - 0 anomalies: "All flows passed smoothly with no anomalies."
-  - Has anomalies: "Found N anomalies — see Suggested Adjustments."
-  - Has health issues: "Found N console errors / API failures — see trace analysis."
-
-#### Step Narrative
-
-- Title: `### Step N — {source page} → {target page/element}`
-- Body: one paragraph — what action, where, what result
-- Result tag: `PASS`, `CONDITIONAL` (RBAC), `FAIL`
-- On FAIL: one-sentence reason summary (no screenshot paths — those belong in report.md)
-
-#### Suggestions Section
-
-| Source | Suggestion |
-|--------|-----------|
-| Stale selector | "Step N: `{element}` selector may be stale. Consider `/e2e-map --page {page}`." |
-| Missing element | "Step N: expected `{element}` not found on `{page}`. Verify if removed or relocated." |
-| Trigger mismatch | "Step N: `{element}` interaction behavior differs from mapping." |
-| Console error | "Step N: console error — `{message first 80 chars}`" |
-| API failure | "Step N: API failure — `{method} {path}` → `{status}`" |
-| No anomalies | Omit the entire suggestions section |
-
-#### report.md Integration
-
-Add the following block at the top of `$REPORT_DIR/report.md` (before existing content):
-
-```markdown
-## Flow Report
-
-> Explored N pages / N dialogs / N steps — N anomalies
-> See [flow-report.md](./flow-report.md)
-
----
-```
-
-#### PR Posting (menu option 2)
-
-When user selects "Post flow report to PR":
-
-```bash
-gh pr comment <PR> --body "$(cat $REPORT_DIR/flow-report.md)"
-```
-
-Mermaid renders natively in GitHub PR comments.
 
 ### Flow YAML Auto-Generation (MANDATORY)
 
@@ -363,58 +400,17 @@ Each step's `site:` is set based on which session was active during that walkthr
 
 ### PR/Issue Posting
 
-- `--pr`: `gh pr comment N --body-file pr-summary.md`
-- `--issue`: Linear MCP `create_comment`
+`pr-summary.md` is already auto-generated in `$REPORT_DIR/` (see § Report above). Posting is a separate step triggered by user confirmation.
 
-**PR Comment Template** (`--pr` mode):
+**Posting commands:**
 
-```markdown
-## E2E Walkthrough Verification Report
+- `--pr`: `gh pr comment <N> --body-file $REPORT_DIR/pr-summary.md`
+- `--issue`: Linear MCP `create_comment` with `pr-summary.md` content
 
-[1-2 sentence overview: what was verified and which scenarios were covered]
-
-### Walkthrough A: [scenario name]
-
-**Flow:** [one-sentence user journey description]
-
-| Step | Screenshot | What happens |
-|------|-----------|-------------|
-| 1. [step name] | ![step1](<screenshot-github-url>) | [what happened] |
-| 2. [step name] | ![step2](<screenshot-github-url>) | [what happened] |
-
-<details>
-<summary>Video recording (M:SS)</summary>
-
-<!-- 👇 DRAG-DROP video.mp4 HERE (replace this line) -->
-Video file: `$REPORT_DIR/walkthrough.mp4`
-
-</details>
-
-### Walkthrough B: [scenario name]
-
-**Flow:** [one-sentence user journey description]
-
-| Step | Screenshot | What happens |
-|------|-----------|-------------|
-| 1. [step name] | ![step1](<screenshot-github-url>) | [what happened] |
-| 2. [step name] | ![step2](<screenshot-github-url>) | [what happened] |
-
----
-
-### Summary
-
-- [N] scenarios verified: [result summary]
-- No console errors or network failures observed in traces
-```
-
-**Template rules:**
-
-- **Step table is the core structure** — Every walkthrough and sub-scenario MUST have a full 3-column `Step | Screenshot | What happens` table. This lets reviewers see key frame changes at a glance. Never use a simplified 2-column table.
-- **One section per scenario** — Each scenario gets its own `### Walkthrough [A/B/C/...]` section with a complete step table. Do not nest sub-scenarios within a parent section using different formats.
-- **Intro paragraph** — Follow the `## E2E Walkthrough Verification Report` heading with a 1-2 sentence overview of what was verified.
-- **Screenshot URLs**: Upload to PR branch, use `https://github.com/<org>/<repo>/blob/<branch>/<path>?raw=true`
-- **Video**: MP4 cannot auto-embed — use `<details>` with drag-drop placeholder. One video block per walkthrough. If multiple scenarios share one recording, place the video block after the last related scenario.
-- **Summary** — Always last. Bullet points summarizing results across all scenarios.
+**Screenshot prerequisite:** Screenshots must be committed and pushed to the PR branch before posting, otherwise GitHub raw URLs will return 404. The posting step should:
+1. Check if screenshot files are committed: `git status $REPORT_DIR/*.png`
+2. If uncommitted, warn: "Screenshots not yet pushed — inline images will be broken. Commit and push first?"
+3. After push confirmed, post the comment.
 
 ### Mapping Self-Repair
 
